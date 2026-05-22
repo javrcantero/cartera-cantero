@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Cartera Cantero · Cereal Paz</title>
+<style>
+:root{--bg:#f4f3ef;--surface:#fff;--border:rgba(0,0,0,.08);--text:#1a1a18;--muted:#6b6a65;--accent:#1a3a5c;--r:12px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);padding-bottom:2rem;}
+.hdr{background:var(--accent);color:#fff;padding:1.1rem 1rem .7rem;position:sticky;top:0;z-index:10;}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;}
+.hdr h1{font-size:16px;font-weight:600;}
+.hdr-sub{font-size:12px;opacity:.65;margin-top:2px;}
+.badge{background:rgba(255,255,255,.18);font-size:11px;padding:3px 10px;border-radius:20px;}
+.tabs{display:flex;background:var(--accent);border-top:1px solid rgba(255,255,255,.12);overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex:0 0 auto;padding:9px 18px;font-size:13px;color:rgba(255,255,255,.55);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;}
+.tab.on{color:#fff;border-color:#fff;}
+.pg{display:none;padding:1rem;}
+.pg.on{display:block;}
+.kgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem;}
+.kpi{background:var(--surface);border-radius:var(--r);padding:.875rem 1rem;border:1px solid var(--border);}
+.kpi.full{grid-column:1/-1;}
+.kpi.acc{background:var(--accent);}
+.klbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.kval{font-size:22px;font-weight:700;color:var(--text);line-height:1;}
+.kpi.acc .klbl{color:rgba(255,255,255,.6);}
+.kpi.acc .kval{color:#fff;font-size:18px;}
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:1rem;margin-bottom:1rem;}
+.ctitle{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.75rem;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:6px 8px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border);}
+td{padding:9px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+.badge-d{display:inline-block;padding:2px 8px;border-radius:5px;font-size:12px;font-weight:700;min-width:36px;text-align:center;}
+.sp{color:#C0392B;font-weight:700;}
+.sn{color:#1D9E75;font-weight:700;}
+.sz{color:var(--muted);}
+.nm{font-weight:600;font-size:13px;}
+.dr{font-size:11px;color:var(--muted);margin-top:2px;}
+.fbr{display:flex;gap:8px;margin-bottom:.75rem;flex-wrap:wrap;}
+.fb{padding:5px 12px;border-radius:20px;font-size:12px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;}
+.fb.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+.leg{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:.75rem;}
+.li{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);}
+.ld{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+canvas{display:block;}
+.rrow{display:flex;align-items:center;gap:10px;font-size:13px;margin-bottom:6px;}
+.rsw{width:32px;height:20px;border-radius:4px;flex-shrink:0;}
+ol{font-size:13px;color:var(--muted);line-height:2.2;padding-left:1.3rem;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-top">
+    <div><h1>Cartera · Cantero Javier</h1><div class="hdr-sub">Cereal Paz Distribuciones</div></div>
+    <span class="badge">22/05/2026</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab on" onclick="tab('resumen',this)">Resumen</div>
+  <div class="tab" onclick="tab('clientes',this)">Clientes</div>
+  <div class="tab" onclick="tab('graficos',this)">Gráficos</div>
+  <div class="tab" onclick="tab('referencia',this)">Referencia</div>
+</div>
+
+<div class="pg on" id="pg-resumen">
+  <div class="kgrid" id="kgrid"></div>
+  <div class="card">
+    <div class="ctitle">Top deudores</div>
+    <table><thead><tr><th>#</th><th>Cliente</th><th style="text-align:right">Saldo</th><th style="text-align:right">Días</th></tr></thead>
+    <tbody id="topTb"></tbody></table>
+  </div>
+</div>
+
+<div class="pg" id="pg-clientes">
+  <div class="fbr">
+    <button class="fb on" onclick="filt('todos',this)">Todos</button>
+    <button class="fb" onclick="filt('deuda',this)">Con deuda</button>
+    <button class="fb" onclick="filt('saf',this)">Saldo a favor</button>
+    <button class="fb" onclick="filt('cero',this)">Sin movimiento</button>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden;"><div id="cliList"></div></div>
+</div>
+
+<div class="pg" id="pg-graficos">
+  <div class="card">
+    <div class="ctitle">Morosidad · clientes con deuda</div>
+    <div class="leg" id="legMor"></div>
+    <canvas id="cMor" height="220"></canvas>
+  </div>
+  <div class="card">
+    <div class="ctitle">Deuda por tipo de actividad</div>
+    <div class="leg" id="legAct"></div>
+    <canvas id="cAct" height="220"></canvas>
+  </div>
+  <div class="card">
+    <div class="ctitle">Top 10 deudores · saldo $</div>
+    <div class="leg" id="legBar"></div>
+    <canvas id="cBar"></canvas>
+  </div>
+  <div class="card">
+    <div class="ctitle">Saldos a favor por cliente</div>
+    <canvas id="cSAF"></canvas>
+  </div>
+</div>
+
+<div class="pg" id="pg-referencia">
+  <div class="card">
+    <div class="ctitle">Rangos de días de demora</div>
+    <div id="rangosRef"></div>
+  </div>
+  <div class="card">
+    <div class="ctitle">Cómo actualizar</div>
+    <ol>
+      <li>Exportá el XLS de deuda</li>
+      <li>Exportá el CSV de clientes</li>
+      <li>Subí ambos archivos a Claude</li>
+      <li>Pedí "actualizame el dashboard de Cantero"</li>
+      <li>Descargá el HTML nuevo y reemplazá este</li>
+    </ol>
+  </div>
+</div>
+
+<script>
+const RANGOS=[
+  {l:'Al día (0–15d)', min:0, max:15, bg:'#1D9E75', txt:'#fff'},
+  {l:'16–30 días',     min:16,max:30, bg:'#F5C030', txt:'#3a2800'},
+  {l:'31–60 días',     min:31,max:60, bg:'#C0392B', txt:'#fff'},
+  {l:'61–90 días',     min:61,max:90, bg:'#6B0D2A', txt:'#fff'},
+  {l:'91+ días',       min:91,max:9999,bg:'#1a1a1a',txt:'#fff'},
+];
+function rango(d){return RANGOS.find(r=>d>=r.min&&d<=r.max)||RANGOS[0];}
+function fmt(n){return '$'+Math.abs(n).toLocaleString('es-AR',{minimumFractionDigits:0,maximumFractionDigits:0});}
+function pct(v,t){return((v/t)*100).toFixed(1)+'%';}
+
+const C=[{"cod":"02897","nombre":"CHEN QINGYONG (RS)","saldo":-3163.27,"dias":4,"dir":"MARCONI 1098 ESQ SAN LUIS","barrio":"RIO SEGUNDO","localidad":"RIO SEGUNDO","actividad":"SUPER CHINOS","condIVA":"RESP. INSCRIPTO","ultCompra":"11/05/2026","zona":"I9 RIO 2- ONCATIVO"},{"cod":"02845","nombre":"CHEN QIU","saldo":802598.24,"dias":220,"dir":"FELIPE BELARDINELLI 3378","barrio":"LAS FLORES","localidad":"CORDOBA","actividad":"SUPER CHINOS","condIVA":"RESP. INSCRIPTO","ultCompra":"13/02/2026","zona":"B01 - CPC SUR JARDIN"},{"cod":"18782","nombre":"DE OLIVEIRA DARIO LUCAS","saldo":0,"dias":0,"dir":"AV. JUAN VUCETICH 7173","barrio":"ITUZAINGO ANEXO","localidad":"CORDOBA","actividad":"ALMACEN","condIVA":"MONOTRIBUTO","ultCompra":"13/03/2026","zona":"B13 - CPC SUR EMPALME"},{"cod":"17919","nombre":"DESPENSA GRAL TOMAS GUIDO","saldo":0,"dias":0,"dir":"GRAL. TOMAS GUIDO 399","barrio":"SAN MARTIN","localidad":"CORDOBA","actividad":"ALMACEN","condIVA":"CONSUMIDOR FINAL","ultCompra":"05/02/2026","zona":"A10 - CPC CENTRO"},{"cod":"19049","nombre":"DESPENSA ILLIA","saldo":0,"dias":0,"dir":"BV ILLIA 651","barrio":"CENTRO","localidad":"CORDOBA","actividad":"DESPENSA","condIVA":"CONSUMIDOR FINAL","ultCompra":"06/02/2026","zona":"B08 - CPC SUR"},{"cod":"05860","nombre":"EL SOL SRL SUCURSAL","saldo":-16920.22,"dias":0,"dir":"27 DE ABRIL 624","barrio":"CENTRO","localidad":"CORDOBA","actividad":"SUPER CHINOS","condIVA":"CONSUMIDOR FINAL","ultCompra":"21/04/2026","zona":"B08 - CPC SUR"},{"cod":"03520","nombre":"HUANG LIQING","saldo":-44486.06,"dias":0,"dir":"VICTOR MANUEL III 1707","barrio":"NUEVA ITALIA","localidad":"CORDOBA","actividad":"SUPER CHINOS","condIVA":"RESP. INSCRIPTO","ultCompra":"06/02/2026","zona":"A07 - CPC NORTE RANCAGUA"},{"cod":"03763","nombre":"HUANG SI MING","saldo":0,"dias":0,"dir":"AV. VELEZ SARFIELD 6096","barrio":"COMERCIAL","localidad":"CORDOBA","actividad":"SUPER CHINOS","condIVA":"RESP. INSCRIPTO","ultCompra":"07/03/2026","zona":"B05 - CPC SUR"},{"cod":"04134","nombre":"LI JANDAN","saldo":181285.58,"dias":10.68,"dir":"AV. SAN MARTIN 1161","barrio":"MALVINAS ARGENTINAS","localidad":"MALVINAS ARGENTINAS","actividad":"SUPER CHINOS","condIVA":"RESP. INSCRIPTO","ultCompra":"23/04/2026","zona":"A15 - CPC NORTE"},{"cod":"19073","nombre":"LIN JUNJIE (J)","saldo":-85894.16,"dias":0,"dir":"AV SAN MARTIN 100","barrio":"MALVINAS ARGENTINAS","localidad":"CORDOBA","actividad":"SUPER CHINOS","condIVA":"RESP. INSCRIPTO","ultCompra":"24/04/2026","zona":"A15 - CPC NORTE"},{"cod":"03454","nombre":"LIN SHUIHONG","saldo":-259723.1,"dias":99,"dir":"MAESTRO VIDAL 1460","barrio":"EL TREBOL","localidad":"CORDOBA","actividad":"SUPER CHINOS","condIVA":"RESP. INSCRIPTO","ultCompra":"05/02/2026","zona":"B06 - CPC SUR RUTA 20"},{"cod":"02879","nombre":"LIN ZHENMEI (SV) (J)","saldo":-90807.78,"dias":0,"dir":"ESTADOS UNIDOS 5052","barrio":"ACOSTA","localidad":"CORDOBA","actividad":"SUPERMERCADO","condIVA":"RESP. INSCRIPTO","ultCompra":"02/05/2026","zona":"B12 - CPC SUR"},{"cod":"05283","nombre":"MAO HUIYIN","saldo":-702884.26,"dias":0,"dir":"AV. M.P. CABRERA 1920","barrio":"PQ. CHACABUCO","localidad":"CORDOBA","actividad":"SUPER CHINOS","condIVA":"RESP. INSCRIPTO","ultCompra":"21/03/2026","zona":"A09 - CPC NORTE"},{"cod":"06040","nombre":"MAYORISTA DIST. LAS PALMAS","saldo":325228.78,"dias":76.61,"dir":"STA. ANA 4300 (M)","barrio":"LAS PALMAS","localidad":"CORDOBA","actividad":"DISTRIBUIDORA","condIVA":"RESP. INSCRIPTO","ultCompra":"28/02/2026","zona":"B06 - CPC SUR RUTA 20"},{"cod":"19048","nombre":"PANADERIA LOS DOS CHINOS","saldo":0,"dias":0,"dir":"BV. ILLIA 341","barrio":"NUEVA CORDOBA","localidad":"CORDOBA","actividad":"PANADERIAS","condIVA":"CONSUMIDOR FINAL","ultCompra":"05/02/2026","zona":"B08 - CPC SUR"},{"cod":"18255","nombre":"POLIRUBRO SEBA","saldo":-196428.16,"dias":0,"dir":"RIO COLORADO 5976","barrio":"VALLE CARCANO","localidad":"CORDOBA","actividad":"POLIRRUBRO","condIVA":"CONSUMIDOR FINAL","ultCompra":"27/02/2026","zona":"B05 - CPC SUR"},{"cod":"19066","nombre":"SOL SRL (J)","saldo":221082.1,"dias":8,"dir":"27 DE ABRIL 1179","barrio":"ALBERDI","localidad":"CORDOBA","actividad":"SUPER CHINOS","condIVA":"RESP. INSCRIPTO","ultCompra":"07/05/2026","zona":"B08 - CPC SUR"},{"cod":"02934","nombre":"SUPER CENTRO (J)","saldo":-256011.02,"dias":0,"dir":"SALTA 6","barrio":"CENTRO","localidad":"CORDOBA","actividad":"SUPERMERCADO","condIVA":"CONSUMIDOR FINAL","ultCompra":"28/04/2026","zona":"B08 - CPC SUR"},{"cod":"02839","nombre":"WANG JULAN","saldo":-155175.94,"dias":0,"dir":"JACINTO RIOS 1359","barrio":"GRAL. PUEYRREDON","localidad":"CORDOBA","actividad":"SUPER CHINOS","condIVA":"RESP. INSCRIPTO","ultCompra":"08/05/2026","zona":"B04 - CPC SUR PUEYRREDON"},{"cod":"02852","nombre":"WANG YUANXIAN","saldo":0,"dias":0,"dir":"SILVIO PETTIROSSI 2487","barrio":"VILLA ADELA","localidad":"CORDOBA","actividad":"SUPER CHINOS","condIVA":"RESP. INSCRIPTO","ultCompra":"27/01/2026","zona":"B06 - CPC SUR RUTA 20"},{"cod":"19110","nombre":"WENG XIAOHUI (J)","saldo":122865.17,"dias":8,"dir":"AV SAN MARTIN 3213","barrio":"UNQUILLO","localidad":"UNQUILLO","actividad":"SUPER CHINOS","condIVA":"CONSUMIDOR FINAL","ultCompra":"07/05/2026","zona":"ISC MENDIL- SALSIPUEDES"},{"cod":"19072","nombre":"WU QUINGHUA (J)","saldo":195648.59,"dias":10,"dir":"CANDIDO GALVAN 1098","barrio":"VILLA AZALAIS","localidad":"CORDOBA","actividad":"SUPER CHINOS","condIVA":"RESP. INSCRIPTO","ultCompra":"05/05/2026","zona":"A07 - CPC NORTE RANCAGUA"},{"cod":"03446","nombre":"YANG JIE (GAVILAN)","saldo":-966210.78,"dias":0,"dir":"GAVILAN 568","barrio":"HOGAR PROPIO","localidad":"CORDOBA","actividad":"SUPER CHINOS","condIVA":"RESP. INSCRIPTO","ultCompra":"03/03/2026","zona":"B04 - CPC SUR PUEYRREDON"},{"cod":"19068","nombre":"YANG JIE (J)","saldo":198731.43,"dias":28,"dir":"GAVILAN 568","barrio":"HOGAR PROPIO","localidad":"CORDOBA","actividad":"SUPER CHINOS","condIVA":"RESP. INSCRIPTO","ultCompra":"17/04/2026","zona":"B04 - CPC SUR PUEYRREDON"},{"cod":"03029","nombre":"YOU XIUZHEN (J)","saldo":5583.23,"dias":34,"dir":"TAFI 1063","barrio":"RES. VELEZ SARSFIELD","localidad":"CORDOBA","actividad":"AUTOSERVICIO","condIVA":"RESP. INSCRIPTO","ultCompra":"11/04/2026","zona":"B05 - CPC SUR"},{"cod":"02965","nombre":"ZHENG LIQING","saldo":606572.77,"dias":161,"dir":"AV. ALFONSINA STORNI 1222","barrio":"PQ. LICEO 2 SECC.","localidad":"CORDOBA","actividad":"SUPER CHINOS","condIVA":"RESP. INSCRIPTO","ultCompra":"29/01/2026","zona":"A02 - CPC NORTE"},{"cod":"02951","nombre":"ZHENG LIQING 2","saldo":-293.33,"dias":0,"dir":"AV. M.P. CABRERA 3165","barrio":"LA FRANCE","localidad":"CORDOBA","actividad":"FORRAJERIA","condIVA":"RESP. INSCRIPTO","ultCompra":"28/02/2026","zona":"A09 - CPC NORTE"},{"cod":"19069","nombre":"ZHENG LIQING 2 (J)","saldo":145607.03,"dias":13,"dir":"AV. M.P. CABRERA 3165","barrio":"LA FRANCE","localidad":"CORDOBA","actividad":"SUPER CHINOS","condIVA":"RESP. INSCRIPTO","ultCompra":"02/05/2026","zona":"A09 - CPC NORTE"},{"cod":"03040","nombre":"ZHENG ZHILIN 2 (J)","saldo":302261.84,"dias":3,"dir":"CELESTINO VIDAL 3410","barrio":"GRAL. BELGRANO","localidad":"CORDOBA","actividad":"SUPER CHINOS","condIVA":"RESP. INSCRIPTO","ultCompra":"31/01/2020","zona":"A07 - CPC NORTE RANCAGUA"},{"cod":"03034","nombre":"NO USAR","saldo":0,"dias":0,"dir":"GAVILAN 568","barrio":"ALTO GRAL PAZ","localidad":"CORDOBA","actividad":"SUPER CHINOS","condIVA":"RESP. INSCRIPTO","ultCompra":"03/03/2026","zona":"B04 - CPC SUR PUEYRREDON"}];
+
+const DEU=C.filter(c=>c.saldo>0).sort((a,b)=>b.saldo-a.saldo);
+const SAF=C.filter(c=>c.saldo<0);
+const CER=C.filter(c=>c.saldo===0);
+const totalD=DEU.reduce((a,c)=>a+c.saldo,0);
+const totalS=Math.abs(SAF.reduce((a,c)=>a+c.saldo,0));
+const promD=DEU.length?DEU.reduce((a,c)=>a+c.dias,0)/DEU.length:0;
+
+// KPIs
+const kg=document.getElementById('kgrid');
+[{l:'Deuda total',v:fmt(totalD),full:true,acc:true},
+ {l:'Total clientes',v:C.length},
+ {l:'Con deuda',v:DEU.length},
+ {l:'Saldo a favor',v:SAF.length},
+ {l:'Sin movimiento',v:CER.length},
+ {l:'Prom. días demora',v:promD.toFixed(1)}
+].forEach(k=>{
+  const d=document.createElement('div');
+  d.className='kpi'+(k.full?' full':'')+(k.acc?' acc':'');
+  d.innerHTML=`<div class="klbl">${k.l}</div><div class="kval">${k.v}</div>`;
+  kg.appendChild(d);
+});
+
+// Top table
+const tb=document.getElementById('topTb');
+DEU.slice(0,10).forEach((c,i)=>{
+  const r=rango(c.dias);
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td style="color:var(--muted);font-size:12px">${i+1}</td>
+    <td><div class="nm">${c.nombre}</div><div class="dr">${c.dir}</div></td>
+    <td style="text-align:right;font-weight:700;color:#C0392B;white-space:nowrap">${fmt(c.saldo)}</td>
+    <td style="text-align:right"><span class="badge-d" style="background:${r.bg};color:${r.txt}">${Math.round(c.dias)}</span></td>`;
+  tb.appendChild(tr);
+});
+
+// Clientes list
+let AF='todos';
+function filt(f,btn){
+  AF=f;
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderCli();
+}
+function renderCli(){
+  let list=f=>({todos:C,deuda:DEU,saf:SAF,cero:CER}[AF]||C);
+  let L=[...list()].sort((a,b)=>b.saldo-a.saldo);
+  const el=document.getElementById('cliList');
+  if(!L.length){el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted);font-size:13px">Sin clientes</div>';return;}
+  el.innerHTML=L.map(c=>{
+    const r=rango(c.dias);
+    const sc=c.saldo>0?'sp':c.saldo<0?'sn':'sz';
+    const sv=c.saldo===0?'–':fmt(c.saldo);
+    return`<div style="padding:10px 1rem;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div style="flex:1;min-width:0">
+          <div class="nm" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.nombre}</div>
+          <div class="dr">${c.dir} · ${c.barrio}</div>
+          <div class="dr" style="margin-top:1px">${c.actividad} · Últ: ${c.ultCompra}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div class="${sc}" style="font-size:13px">${sv}</div>
+          ${c.saldo!==0?`<span class="badge-d" style="background:${r.bg};color:${r.txt};margin-top:4px;display:inline-block">${Math.round(c.dias)}d</span>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+renderCli();
+
+// ── CANVAS CHARTS (pure JS, no libs) ─────────────────────────────────────────
+
+function drawDonut(canvasId, data, colors, labels, total, centerLine1, centerLine2){
+  const cv=document.getElementById(canvasId);
+  cv.width=cv.parentElement.offsetWidth||340;
+  const W=cv.width, H=cv.height||220, cx=W/2, cy=H/2, R=Math.min(cx,cy)-20, ri=R*0.52;
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  let start=-Math.PI/2;
+  data.forEach((v,i)=>{
+    if(!v)return;
+    const slice=(v/total)*Math.PI*2;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,R,start,start+slice);
+    ctx.closePath();
+    ctx.fillStyle=colors[i];
+    ctx.fill();
+    ctx.strokeStyle='#f4f3ef';
+    ctx.lineWidth=2;
+    ctx.stroke();
+    const mid=start+slice/2;
+    const lx=cx+Math.cos(mid)*(R*0.72), ly=cy+Math.sin(mid)*(R*0.72);
+    const p=((v/total)*100).toFixed(0);
+    if(slice>0.18){
+      ctx.fillStyle='#fff';
+      ctx.font='bold 11px Segoe UI,sans-serif';
+      ctx.textAlign='center';
+      ctx.textBaseline='middle';
+      ctx.fillText(p+'%',lx,ly);
+    }
+    start+=slice;
+  });
+  ctx.beginPath();
+  ctx.arc(cx,cy,ri,0,Math.PI*2);
+  ctx.fillStyle='#fff';
+  ctx.fill();
+  ctx.fillStyle='#1a1a18';
+  ctx.font='bold 13px Segoe UI,sans-serif';
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillText(centerLine1,cx,cy-8);
+  ctx.font='10px Segoe UI,sans-serif';
+  ctx.fillStyle='#6b6a65';
+  ctx.fillText(centerLine2,cx,cy+8);
+}
+
+function drawBar(canvasId, labels, values, colors){
+  const cv=document.getElementById(canvasId);
+  const W=cv.parentElement.offsetWidth||340;
+  const barH=36, pad=8, labelW=160, rightPad=70;
+  const H=labels.length*(barH+pad)+40;
+  cv.width=W; cv.height=H;
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  const maxV=Math.max(...values);
+  const barW=W-labelW-rightPad-16;
+  labels.forEach((l,i)=>{
+    const y=i*(barH+pad)+20;
+    // label
+    ctx.fillStyle='#6b6a65';
+    ctx.font='11px Segoe UI,sans-serif';
+    ctx.textAlign='right';
+    ctx.textBaseline='middle';
+    const lbl=l.length>22?l.slice(0,21)+'…':l;
+    ctx.fillText(lbl,labelW,y+barH/2);
+    // bar
+    const bw=Math.max(4,(values[i]/maxV)*barW);
+    ctx.fillStyle=colors[i];
+    roundRect(ctx,labelW+8,y,bw,barH,5);
+    ctx.fill();
+    // value
+    ctx.fillStyle='#1a1a18';
+    ctx.font='bold 11px Segoe UI,sans-serif';
+    ctx.textAlign='left';
+    const v=values[i];
+    const vstr=v>=1000000?'$'+(v/1000000).toFixed(2)+'M':'$'+(v/1000).toFixed(0)+'k';
+    ctx.fillText(vstr,labelW+8+bw+6,y+barH/2);
+  });
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+// Build chart data
+const morCounts=[0,0,0,0,0];
+DEU.forEach(c=>morCounts[RANGOS.indexOf(rango(c.dias))]++);
+const morTotal=morCounts.reduce((a,b)=>a+b,0);
+const legMor=document.getElementById('legMor');
+RANGOS.forEach((r,i)=>{
+  legMor.innerHTML+=`<span class="li"><span class="ld" style="background:${r.bg};border:1px solid rgba(0,0,0,.1)"></span>${r.l} · <b>${pct(morCounts[i],morTotal)}</b></span>`;
+});
+
+const actMap={};
+DEU.forEach(c=>{actMap[c.actividad]=(actMap[c.actividad]||0)+c.saldo;});
+const actE=Object.entries(actMap).sort((a,b)=>b[1]-a[1]);
+const actT=actE.reduce((a,b)=>a+b[1],0);
+const actColors=['#1a3a5c','#378ADD','#7F77DD','#1D9E75','#F5C030','#C0392B'];
+const legAct=document.getElementById('legAct');
+actE.forEach(([k,v],i)=>{
+  legAct.innerHTML+=`<span class="li"><span class="ld" style="background:${actColors[i%actColors.length]}"></span>${k} · <b>${pct(v,actT)}</b></span>`;
+});
+
+const top10=DEU.slice(0,10).reverse();
+const legBar=document.getElementById('legBar');
+RANGOS.forEach(r=>{
+  legBar.innerHTML+=`<span class="li"><span class="ld" style="background:${r.bg};border:1px solid rgba(0,0,0,.1)"></span>${r.l}</span>`;
+});
+
+// Referencia
+const rr=document.getElementById('rangosRef');
+RANGOS.forEach(r=>{
+  rr.innerHTML+=`<div class="rrow"><div class="rsw" style="background:${r.bg};border:1px solid rgba(0,0,0,.1)"></div><span>${r.l}</span></div>`;
+});
+
+// Tabs
+function tab(name,el){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('pg-'+name).classList.add('on');
+  el.classList.add('on');
+  if(name==='graficos') setTimeout(drawCharts,50);
+}
+
+let chartsDrawn=false;
+function drawCharts(){
+  if(chartsDrawn)return;
+  chartsDrawn=true;
+  drawDonut('cMor',morCounts,RANGOS.map(r=>r.bg),RANGOS.map(r=>r.l),morTotal||1,morTotal,'clientes');
+  const actCenterVal='$'+Math.round(actT).toLocaleString('es-AR',{minimumFractionDigits:0,maximumFractionDigits:0});
+  drawDonut('cAct',actE.map(e=>e[1]),actColors.slice(0,actE.length),actE.map(e=>e[0]),actT||1,actCenterVal,'total deuda');
+  drawBar('cBar',top10.map(c=>c.nombre),top10.map(c=>c.saldo),top10.map(c=>rango(c.dias).bg));
+  // SAF chart — sorted descending by abs value
+  const safSorted=[...SAF].sort((a,b)=>a.saldo-b.saldo); // most negative first
+  drawBarSAF('cSAF',safSorted.map(c=>c.nombre),safSorted.map(c=>Math.abs(c.saldo)));
+}
+
+function drawBarSAF(canvasId, labels, values){
+  const cv=document.getElementById(canvasId);
+  const W=cv.parentElement.offsetWidth||340;
+  const barH=32, pad=7, labelW=155, rightPad=75;
+  const H=labels.length*(barH+pad)+40;
+  cv.width=W; cv.height=H;
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  const maxV=Math.max(...values)||1;
+  const barW=W-labelW-rightPad-16;
+  labels.forEach((l,i)=>{
+    const y=i*(barH+pad)+20;
+    ctx.fillStyle='#6b6a65';
+    ctx.font='11px Segoe UI,sans-serif';
+    ctx.textAlign='right';
+    ctx.textBaseline='middle';
+    ctx.fillText(l.length>22?l.slice(0,21)+'…':l, labelW, y+barH/2);
+    const bw=Math.max(4,(values[i]/maxV)*barW);
+    ctx.fillStyle='#1D9E75';
+    roundRect(ctx,labelW+8,y,bw,barH,5);
+    ctx.fill();
+    ctx.fillStyle='#1a1a18';
+    ctx.font='bold 11px Segoe UI,sans-serif';
+    ctx.textAlign='left';
+    const v=values[i];
+    const vstr=v>=1000000?'$'+(v/1000000).toFixed(2)+'M':'$'+(v/1000).toFixed(0)+'k';
+    ctx.fillText(vstr,labelW+8+bw+6,y+barH/2);
+  });
+}
+</script>
+</body>
+</html>
